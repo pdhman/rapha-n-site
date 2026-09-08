@@ -40,7 +40,14 @@ python -m http.server 8080
 
 브라우저에서 http://localhost:8080 열기. (`file://` 로 열면 라이브 카드 fetch 만 실패하고 나머지는 동작한다.)
 
-## 배포 방법 (택 1)
+## 배포 (완료)
+
+- 저장소: https://github.com/pdhman/rapha-n-site (homepage/ 폴더가 독립 git 저장소)
+- 공개 주소: https://pdhman.github.io/rapha-n-site/
+- main 브랜치 루트를 GitHub Pages 가 서빙하므로 `git push` 가 곧 배포다(1~2분 소요).
+- rapha-n.com 을 연결하려면 Settings → Pages → Custom domain 에 입력하고 DNS 를 GitHub Pages 로 변경.
+
+## 다른 배포 방법 (참고)
 
 1. **GitHub Pages 새 저장소** — `homepage/` 내용을 새 저장소(예: `rapha-n-site`) 루트에 올리고
    Settings → Pages 에서 main 브랜치 서빙. 커스텀 도메인에 `rapha-n.com` 을 등록하고
