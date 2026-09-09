@@ -100,6 +100,7 @@
     document.documentElement.dataset.theme = t;
     try { localStorage.setItem('theme', t); } catch (e) {}
     var b = $('#theme-btn'); if (b) b.textContent = t === 'dark' ? '☀️' : '🌙';
+    var f = $('#v-frame'); if (f && f.src) { var u = f.src; f.src = 'about:blank'; setTimeout(function () { f.src = u; }, 30); }
   }
   (function () { var t = null; try { t = localStorage.getItem('theme'); } catch (e) {} if (t) document.documentElement.dataset.theme = t; })();
 

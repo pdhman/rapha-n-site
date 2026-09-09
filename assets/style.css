@@ -1,15 +1,18 @@
 /* ───────── 라파엔투자자문 홈페이지 공통 스타일 ───────── */
 :root {
-  --navy:#0b1230; --navy-2:#111a3d; --navy-3:#182252;
-  --bg:#0b1230; --panel:#131c44; --panel-2:#1a2555;
-  --ink:#eef1fa; --muted:#9aa4c7; --line:#27336b;
-  --accent:#6f8cff; --accent-2:#a78bfa; --up:#ff6b6b; --down:#5c9bff;
+  /* 알파노트 대시보드(docs/)와 동일한 팔레트 — iframe 콘텐츠와 이질감이 없도록 값을 맞춘다 */
+  --navy:#0f1216; --navy-2:#141a24; --navy-3:#1a2230;
+  --bg:#0f1216; --panel:#171b21; --panel-2:#1e242c;
+  --ink:#e8eaed; --muted:#9aa2ad; --line:#252b33;
+  --accent:#748ffc; --accent-2:#a78bfa; --up:#ff6b6b; --down:#5c9bff;
+  --hero:#141a24; --glow:rgba(116,143,252,.16);
   --radius:16px; --header-h:64px; --max:1180px;
 }
 :root[data-theme="light"] {
-  --bg:#f5f7fc; --panel:#ffffff; --panel-2:#eef1fa;
-  --ink:#151a33; --muted:#5f6a8f; --line:#dfe4f3;
+  --bg:#f6f7f9; --panel:#ffffff; --panel-2:#eef0f4;
+  --ink:#1a1d21; --muted:#6b7280; --line:#e6e8eb;
   --accent:#3b5bdb; --accent-2:#7c3aed; --up:#e03131; --down:#1c7ed6;
+  --hero:#ffffff; --glow:rgba(59,91,219,.10);
 }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
@@ -24,7 +27,7 @@ img { max-width:100%; }
 .site-header { position:fixed; top:0; left:0; right:0; z-index:100; height:var(--header-h);
   background:color-mix(in srgb,var(--navy) 82%,transparent); backdrop-filter:blur(12px);
   border-bottom:1px solid color-mix(in srgb,#fff 8%,transparent); color:#fff; }
-:root[data-theme="light"] .site-header { background:color-mix(in srgb,#ffffff 88%,transparent);
+:root[data-theme="light"] .site-header { background:color-mix(in srgb,var(--panel) 90%,transparent);
   border-bottom-color:var(--line); color:var(--ink); }
 .site-header .wrap { display:flex; align-items:center; height:100%; gap:24px; }
 .brand { font-weight:800; font-size:19px; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
@@ -81,14 +84,14 @@ img { max-width:100%; }
 .btn-row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
 .hero .scroll-hint { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); color:#8f9bd0; font-size:12px; letter-spacing:.2em; z-index:1; }
 
-/* ── 페이지 히어로(서브페이지 상단) ── */
-.page-hero { padding:calc(var(--header-h) + 64px) 0 48px; color:#fff; background:
-  radial-gradient(900px 400px at 80% 20%, rgba(111,140,255,.22), transparent 60%), var(--navy-2); }
+/* ── 페이지 히어로(서브페이지 상단) — 테마를 따라간다 ── */
+.page-hero { padding:calc(var(--header-h) + 64px) 0 48px; color:var(--ink); border-bottom:1px solid var(--line); background:
+  radial-gradient(900px 400px at 80% 20%, var(--glow), transparent 60%), var(--hero); }
 .page-hero.compact { padding:calc(var(--header-h) + 28px) 0 24px; }
-.page-hero .eyebrow { color:#aab7ff; font-weight:700; letter-spacing:.14em; font-size:12px; }
+.page-hero .eyebrow { color:var(--accent); font-weight:700; letter-spacing:.14em; font-size:12px; }
 .page-hero h1 { margin:8px 0 8px; font-size:clamp(26px,3.6vw,40px); letter-spacing:-.01em; }
 .page-hero.compact h1 { font-size:clamp(20px,2.6vw,26px); margin:4px 0 4px; }
-.page-hero p { margin:0; color:#b8c1e6; max-width:720px; font-size:15px; }
+.page-hero p { margin:0; color:var(--muted); max-width:720px; font-size:15px; }
 
 /* ── 섹션 공통 ── */
 section.block { padding:84px 0; }
@@ -212,13 +215,14 @@ a.card:hover { transform:translateY(-2px); }
 .timeline li::before { content:""; position:absolute; left:-7px; top:6px; width:12px; height:12px; border-radius:50%; background:var(--accent); }
 .timeline .when { color:var(--accent); font-weight:700; font-size:13px; }
 .timeline .what { font-size:15px; }
-.cta { text-align:center; padding:70px 24px; background:linear-gradient(135deg,var(--navy-2),var(--navy-3)); color:#fff; }
+.cta { text-align:center; padding:70px 24px; background:radial-gradient(700px 300px at 50% 0%, var(--glow), transparent 70%), var(--panel); color:var(--ink); border-top:1px solid var(--line); }
 .cta h2 { margin:0 0 10px; font-size:clamp(22px,3vw,30px); }
-.cta p { color:#b8c1e6; margin:0 0 24px; }
+.cta p { color:var(--muted); margin:0 0 24px; }
+.cta .btn:not(.primary) { border-color:var(--line); color:var(--ink); }
 
 /* ── 푸터 ── */
 .site-footer { background:var(--navy); color:#aab3d9; padding:44px 0 36px; border-top:1px solid color-mix(in srgb,#fff 8%,transparent); font-size:13px; }
-:root[data-theme="light"] .site-footer { background:#101736; }
+:root[data-theme="light"] .site-footer { background:#1a1d21; }
 .site-footer .cols { display:flex; gap:40px; flex-wrap:wrap; justify-content:space-between; }
 .site-footer .brand { color:#fff; margin-bottom:12px; }
 .site-footer p { margin:3px 0; }
