@@ -11,6 +11,9 @@
     nameEn: 'RAPHA-N INVESTMENT ADVISORY',
     // 알파노트 대시보드가 배포된 주소(끝에 / 포함). 같은 폴더에 두면 './' 로 바꾸면 된다.
     alphaBase: 'https://pdhman.github.io/report-summary/',
+    // 공지 글이 저장되는 GitHub 저장소(admin.html 이 이 저장소의 notices.json 을 갱신한다)
+    repo: 'pdhman/rapha-n-site',
+    noticesFile: 'notices.json',
     company: {
       ceo: '이증락',
       addr: '서울특별시 금천구 벚꽃로 26길 30 가산 KS타워 1511호',
@@ -65,15 +68,8 @@
         { key: 'aicycle',     ic: '🤖', title: 'AI 사이클 리스크', file: 'aicycle.html',     desc: '공급과잉·수요둔화·레버리지 위험 신호' }
       ]
     },
-    /* 공지/공시. 최신 글을 맨 앞에 둔다. body 는 HTML 허용. */
-    notices: [
-      { id: 3, date: '2026-09-08', cat: '공지', pin: true, title: '홈페이지 개편 안내',
-        body: '<p>라파엔투자자문 홈페이지를 새롭게 단장했습니다. Strategy·Information 메뉴에서 매일 자동 갱신되는 리서치 대시보드를 확인하실 수 있습니다.</p><p>대시보드의 모든 정보는 자동 수집·생성된 참고 자료이며, 투자 판단의 책임은 이용자 본인에게 있습니다.</p>' },
-      { id: 2, date: '2026-09-01', cat: '공시', pin: false, title: '투자자문업 등록 사항 안내',
-        body: '<p>당사는 자본시장과 금융투자업에 관한 법률에 따라 투자자문업(등록업무 5-1-1)을 영위하고 있습니다. 세부 등록 사항은 금융투자협회 공시 페이지에서 확인하실 수 있습니다.</p>' },
-      { id: 1, date: '2026-08-15', cat: '공지', pin: false, title: '알파노트 데일리 리서치 서비스 오픈',
-        body: '<p>매일 아침 시황 브리핑, 리포트 인사이트, 시장 건전성·수급·레버리지 지표를 자동으로 수집해 제공하는 알파노트 서비스를 시작합니다.</p>' }
-    ]
+    /* 공지/공시 글은 notices.json 에 있다(admin.html 에서 작성). 아래는 파일을 못 읽을 때의 폴백. */
+    notices: []
   };
   window.SITE = SITE;
 
@@ -139,7 +135,7 @@
       '<p>주소 : ' + esc(c.addr) + '</p>' +
       '<p>대표전화 : ' + esc(c.tel) + (c.email ? ' &nbsp;|&nbsp; 이메일 : ' + esc(c.email) : '') + '</p>' +
       '<p>등록업무 : ' + esc(c.reg) + '</p></div>' +
-      '<div class="links"><p><a href="about.html">회사소개</a><a href="notice.html">공지/공시</a><a href="about.html#privacy">개인정보처리방침</a><a href="about.html#terms">이용약관</a></p>' +
+      '<div class="links"><p><a href="about.html">회사소개</a><a href="notice.html">공지/공시</a><a href="about.html#privacy">개인정보처리방침</a><a href="about.html#terms">이용약관</a><a href="admin.html" style="color:#7f8ab5;font-weight:500">관리자</a></p>' +
       '<p class="disc">본 홈페이지의 리서치·대시보드는 공개 데이터를 자동 수집·가공한 참고 자료로, 특정 종목의 매수·매도를 권유하는 것이 아닙니다. 투자 판단과 그 결과에 대한 책임은 투자자 본인에게 있습니다.</p></div></div>' +
       '<p class="copy">Copyright © ' + esc(c.founded) + '–' + new Date().getFullYear() + ' ' + esc(SITE.name) + '. All rights reserved.</p></div>';
   }
@@ -232,24 +228,57 @@
   }
 
   /* ── 8. 공지 게시판 ───────────────────────────────── */
-  function renderNotices(el) {
-    var id = param('id');
-    if (id) {
-      var n = SITE.notices.filter(function (x) { return String(x.id) === id; })[0];
-      if (n) {
-        el.innerHTML = '<div class="notice-body"><h2><span class="badge' + (n.pin ? ' pin' : '') + '">' + esc(n.cat) + '</span>' + esc(n.title) + '</h2>' +
-          '<div class="meta">' + esc(n.date) + ' · ' + esc(SITE.name) + '</div>' + n.body + '<a class="back" href="notice.html">← 목록으로</a></div>';
-        document.title = n.title + ' · ' + SITE.name; return;
-      }
+  // 아주 작은 마크다운 변환기: 제목(#), 굵게(**), 링크, 목록(- ), 빈 줄로 문단 구분, 줄바꿈 유지
+  function md(src) {
+    var lines = String(src || '').replace(/\r/g, '').split('\n'), out = [], para = [], list = [];
+    function inline(t) {
+      t = esc(t);
+      t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      t = t.replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      t = t.replace(/(^|[^"'>])(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+      return t;
     }
-    var rows = SITE.notices.slice().sort(function (a, b) { return (b.pin - a.pin) || (b.date > a.date ? 1 : -1); });
-    var html = '<table class="board"><thead><tr><th style="width:60px">No</th><th>제목</th><th style="width:90px">분류</th><th style="width:120px">작성일</th></tr></thead><tbody>';
-    rows.forEach(function (n) {
-      html += '<tr><td class="no">' + n.id + '</td><td class="title"><a href="notice.html?id=' + n.id + '">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + esc(n.title) + '</a></td><td>' + esc(n.cat) + '</td><td class="date">' + esc(n.date) + '</td></tr>';
+    function flushP() { if (para.length) { out.push('<p>' + para.map(inline).join('<br>') + '</p>'); para = []; } }
+    function flushL() { if (list.length) { out.push('<ul>' + list.map(function (x) { return '<li>' + inline(x) + '</li>'; }).join('') + '</ul>'); list = []; } }
+    lines.forEach(function (ln) {
+      var h = ln.match(/^(#{1,3})\s+(.*)$/), li = ln.match(/^[-*]\s+(.*)$/);
+      if (h) { flushP(); flushL(); out.push('<h' + (h[1].length + 2) + '>' + inline(h[2]) + '</h' + (h[1].length + 2) + '>'); }
+      else if (li) { flushP(); list.push(li[1]); }
+      else if (!ln.trim()) { flushP(); flushL(); }
+      else { flushL(); para.push(ln); }
     });
-    html += '</tbody></table>';
-    if (!rows.length) html = '<p class="center" style="color:var(--muted)">등록된 공지가 없습니다.</p>';
-    el.innerHTML = html;
+    flushP(); flushL();
+    return out.join('');
+  }
+  window.renderMarkdown = md;
+
+  function loadNotices() {
+    return fetch(SITE.noticesFile + '?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .catch(function () { return SITE.notices; });
+  }
+  function noticeBody(n) { return /<[a-z][\s\S]*>/i.test(n.body || '') ? n.body : md(n.body); }
+  function renderNotices(el) {
+    el.innerHTML = '<p class="center" style="color:var(--muted)">불러오는 중…</p>';
+    loadNotices().then(function (notices) {
+      var id = param('id');
+      if (id) {
+        var n = notices.filter(function (x) { return String(x.id) === id; })[0];
+        if (n) {
+          el.innerHTML = '<div class="notice-body"><h2><span class="badge' + (n.pin ? ' pin' : '') + '">' + esc(n.cat) + '</span>' + esc(n.title) + '</h2>' +
+            '<div class="meta">' + esc(n.date) + ' · ' + esc(SITE.name) + '</div><div class="md">' + noticeBody(n) + '</div><a class="back" href="notice.html">← 목록으로</a></div>';
+          document.title = n.title + ' · ' + SITE.name; return;
+        }
+      }
+      var rows = notices.slice().sort(function (a, b) { return (b.pin - a.pin) || (b.date > a.date ? 1 : b.date < a.date ? -1 : b.id - a.id); });
+      var html = '<table class="board"><thead><tr><th style="width:60px">No</th><th>제목</th><th style="width:90px">분류</th><th style="width:120px">작성일</th></tr></thead><tbody>';
+      rows.forEach(function (n) {
+        html += '<tr><td class="no">' + n.id + '</td><td class="title"><a href="notice.html?id=' + n.id + '">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + esc(n.title) + '</a></td><td>' + esc(n.cat) + '</td><td class="date">' + esc(n.date) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      if (!rows.length) html = '<p class="center" style="color:var(--muted)">등록된 공지가 없습니다.</p>';
+      el.innerHTML = html;
+    });
   }
 
   /* ── 9. 회사 정보 치환 ────────────────────────────── */

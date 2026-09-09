@@ -25,7 +25,7 @@ rapha-n.com 과 같은 메뉴 구조(Business / Strategy / Process / Information
 - 상단 메뉴·드롭다운 → `SITE.menu`
 - 대시보드 추가/삭제 → `SITE.dashboards.strategy` 또는 `.information` 에 `{ key, ic, title, file, desc }` 한 줄 추가.
   `file` 은 알파노트(`docs/`)의 파일명.
-- 공지 글 추가 → `SITE.notices` 맨 앞에 `{ id, date, cat, pin, title, body }` 추가.
+- 공지 글 → `notices.json` 이 원본. **admin.html** 에서 GitHub 토큰(rapha-n-site 저장소 Contents 읽기/쓰기)을 등록하면 사이트 안에서 작성·수정·삭제할 수 있고, 저장하면 GitHub API 로 notices.json 이 커밋된다(1~2분 뒤 반영). GitHub 웹에서 notices.json 을 직접 편집해도 된다.
 
 알파노트 대시보드는 `SITE.alphaBase`(기본 `https://pdhman.github.io/report-summary/`)에서
 iframe 으로 불러온다. 메인의 "오늘의 리서치" 카드는 알파노트 `index.html` 을 fetch 해

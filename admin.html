@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>관리자 · 라파엔투자자문</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<section class="page-hero compact">
+  <div class="wrap">
+    <div class="eyebrow">ADMIN</div>
+    <h1>공지/공시 글쓰기</h1>
+    <p>여기서 저장하면 GitHub 저장소의 notices.json 이 갱신되고 1~2분 뒤 사이트에 반영됩니다.</p>
+  </div>
+</section>
+
+<section class="block" style="padding-top:36px">
+  <div class="wrap admin">
+
+    <div class="box" id="auth-box">
+      <h2>1. 관리자 인증</h2>
+      <div id="token-state" class="msg">확인 중…</div>
+      <div id="token-form">
+        <label for="token">GitHub 개인 액세스 토큰 (이 브라우저에만 저장됩니다)</label>
+        <input type="password" id="token" placeholder="github_pat_…" autocomplete="off">
+        <div class="actions">
+          <button class="btn primary" id="token-save">토큰 저장</button>
+          <button class="btn" id="token-clear">토큰 삭제</button>
+        </div>
+        <details>
+          <summary>토큰 만드는 법</summary>
+          <ol>
+            <li>GitHub 로그인 → 오른쪽 위 프로필 → <b>Settings</b> → 맨 아래 <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b></li>
+            <li>Repository access 에서 <b>Only select repositories</b> → <code>rapha-n-site</code> 선택</li>
+            <li>Permissions → Repository permissions → <b>Contents</b> 를 <b>Read and write</b> 로 설정</li>
+            <li>만료 기간을 정하고 생성 → 토큰 문자열을 복사해 위 칸에 붙여넣고 저장</li>
+          </ol>
+          <p>토큰은 이 브라우저의 저장소에만 보관되며 서버로 전송되지 않습니다(GitHub API 호출에만 사용). 다른 기기에서 글을 쓰려면 그 기기에서 다시 등록하세요.</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2 id="form-title">2. 새 글 쓰기</h2>
+      <div class="row">
+        <div><label for="f-cat">분류</label>
+          <select id="f-cat"><option>공지</option><option>공시</option><option>안내</option></select></div>
+        <div><label for="f-date">작성일</label><input type="date" id="f-date"></div>
+        <div class="chk" style="align-self:end"><input type="checkbox" id="f-pin"><label for="f-pin" style="margin:0">상단 고정</label></div>
+        <div></div>
+      </div>
+      <label for="f-title">제목</label>
+      <input type="text" id="f-title" placeholder="제목을 입력하세요">
+      <label for="f-body">본문 (마크다운 일부 지원: <code># 제목</code>, <code>**굵게**</code>, <code>- 목록</code>, 링크 주소는 자동 연결)</label>
+      <textarea id="f-body" placeholder="본문을 입력하세요. 빈 줄로 문단을 나눕니다."></textarea>
+      <label>미리보기</label>
+      <div class="preview md" id="f-preview"></div>
+      <div class="actions">
+        <button class="btn primary" id="save">게시하기</button>
+        <button class="btn" id="reset">새 글로 초기화</button>
+        <span class="msg" id="save-msg"></span>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>3. 등록된 글 <span class="msg" id="list-msg"></span></h2>
+      <table class="list"><tbody id="list"></tbody></table>
+    </div>
+
+  </div>
+</section>
+
+<script src="assets/site.js"></script>
+<script>
+(function () {
+  var API = 'https://api.github.com/repos/' + SITE.repo + '/contents/' + SITE.noticesFile;
+  var KEY = 'rn-gh-token';
+  var $ = function (s) { return document.querySelector(s); };
+  var state = { notices: [], sha: null, editing: null };
+
+  function token() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
+  function headers(json) {
+    var h = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+    if (token()) h['Authorization'] = 'Bearer ' + token();
+    if (json) h['Content-Type'] = 'application/json';
+    return h;
+  }
+  function b64enc(str) { return btoa(unescape(encodeURIComponent(str))); }
+  function b64dec(str) { return decodeURIComponent(escape(atob(str.replace(/\n/g, '')))); }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function msg(el, text, cls) { el.textContent = text; el.className = 'msg ' + (cls || ''); }
+
+  /* ── 인증 상태 ── */
+  function checkToken() {
+    var st = $('#token-state');
+    if (!token()) { msg(st, '토큰이 없습니다. 글 목록은 볼 수 있지만 게시하려면 토큰을 등록하세요.', 'err'); return; }
+    fetch('https://api.github.com/repos/' + SITE.repo, { headers: headers() })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (repo) {
+        var ok = repo.permissions && repo.permissions.push;
+        msg(st, ok ? '인증됨 · ' + SITE.repo + ' 에 쓰기 권한 있음' : '토큰은 유효하지만 이 저장소에 쓰기 권한이 없습니다.', ok ? 'ok' : 'err');
+      })
+      .catch(function (e) { msg(st, '토큰 확인 실패(' + e.message + '). 만료되었거나 잘못된 토큰입니다.', 'err'); });
+  }
+  $('#token-save').onclick = function () {
+    var v = $('#token').value.trim(); if (!v) return;
+    try { localStorage.setItem(KEY, v); } catch (e) {}
+    $('#token').value = ''; checkToken(); load();
+  };
+  $('#token-clear').onclick = function () { try { localStorage.removeItem(KEY); } catch (e) {} checkToken(); };
+
+  /* ── 목록 ── */
+  function load() {
+    msg($('#list-msg'), '불러오는 중…');
+    fetch(API + '?ref=main&t=' + Date.now(), { headers: headers(), cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (file) {
+        state.sha = file.sha;
+        state.notices = JSON.parse(b64dec(file.content));
+        renderList(); msg($('#list-msg'), state.notices.length + '건');
+      })
+      .catch(function (e) { msg($('#list-msg'), '목록을 불러오지 못했습니다(' + e.message + ')', 'err'); });
+  }
+  function renderList() {
+    var rows = state.notices.slice().sort(function (a, b) { return b.id - a.id; });
+    $('#list').innerHTML = rows.map(function (n) {
+      return '<tr><td class="d">' + n.id + '</td><td class="t">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + '<span class="badge">' + esc(n.cat) + '</span>' + esc(n.title) + '</td>' +
+        '<td class="d">' + esc(n.date) + '</td><td class="d"><button data-edit="' + n.id + '">수정</button><button data-del="' + n.id + '">삭제</button></td></tr>';
+    }).join('') || '<tr><td class="t" style="color:var(--muted)">등록된 글이 없습니다.</td></tr>';
+  }
+  $('#list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.edit) startEdit(+b.dataset.edit);
+    if (b.dataset.del) removeNotice(+b.dataset.del);
+  });
+
+  /* ── 폼 ── */
+  function resetForm() {
+    state.editing = null;
+    $('#form-title').textContent = '2. 새 글 쓰기';
+    $('#f-cat').value = '공지'; $('#f-date').value = today(); $('#f-pin').checked = false;
+    $('#f-title').value = ''; $('#f-body').value = ''; preview(); msg($('#save-msg'), '');
+  }
+  function startEdit(id) {
+    var n = state.notices.filter(function (x) { return x.id === id; })[0]; if (!n) return;
+    state.editing = id;
+    $('#form-title').textContent = '2. 글 수정 (No.' + id + ')';
+    $('#f-cat').value = n.cat; $('#f-date').value = n.date; $('#f-pin').checked = !!n.pin;
+    $('#f-title').value = n.title; $('#f-body').value = n.body; preview();
+    window.scrollTo({ top: $('#form-title').getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
+  }
+  function preview() { $('#f-preview').innerHTML = window.renderMarkdown($('#f-body').value) || '<span style="color:var(--muted)">본문 미리보기</span>'; }
+  $('#f-body').addEventListener('input', preview);
+  $('#reset').onclick = resetForm;
+
+  /* ── 저장(커밋) ── */
+  function commit(notices, message) {
+    var body = { message: message, content: b64enc(JSON.stringify(notices, null, 2) + '\n'), branch: 'main' };
+    if (state.sha) body.sha = state.sha;
+    return fetch(API, { method: 'PUT', headers: headers(true), body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(r.status + ' ' + (j.message || '')); return j; }); })
+      .then(function (j) { state.sha = j.content.sha; state.notices = notices; renderList(); });
+  }
+  $('#save').onclick = function () {
+    var title = $('#f-title').value.trim(), body = $('#f-body').value.trim();
+    var sm = $('#save-msg');
+    if (!token()) { msg(sm, '먼저 토큰을 등록하세요.', 'err'); return; }
+    if (!title) { msg(sm, '제목을 입력하세요.', 'err'); return; }
+    var item = { id: state.editing || (Math.max.apply(null, [0].concat(state.notices.map(function (n) { return n.id; }))) + 1),
+      date: $('#f-date').value || today(), cat: $('#f-cat').value, pin: $('#f-pin').checked, title: title, body: body };
+    var next = state.notices.filter(function (n) { return n.id !== item.id; }); next.unshift(item);
+    $('#save').disabled = true; msg(sm, '게시 중…');
+    commit(next, (state.editing ? '공지 수정: ' : '공지 게시: ') + title)
+      .then(function () { msg(sm, '게시됐습니다. 1~2분 뒤 사이트에 반영됩니다.', 'ok'); state.editing = null; setTimeout(resetForm, 1500); })
+      .catch(function (e) { msg(sm, '실패: ' + e.message, 'err'); })
+      .then(function () { $('#save').disabled = false; });
+  };
+  function removeNotice(id) {
+    var n = state.notices.filter(function (x) { return x.id === id; })[0]; if (!n) return;
+    if (!token()) { msg($('#list-msg'), '먼저 토큰을 등록하세요.', 'err'); return; }
+    if (!confirm('"' + n.title + '" 글을 삭제할까요?')) return;
+    msg($('#list-msg'), '삭제 중…');
+    commit(state.notices.filter(function (x) { return x.id !== id; }), '공지 삭제: ' + n.title)
+      .then(function () { msg($('#list-msg'), '삭제됐습니다. 1~2분 뒤 사이트에 반영됩니다.', 'ok'); if (state.editing === id) resetForm(); })
+      .catch(function (e) { msg($('#list-msg'), '실패: ' + e.message, 'err'); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () { resetForm(); checkToken(); load(); });
+})();
+</script>
+</body>
+</html>
