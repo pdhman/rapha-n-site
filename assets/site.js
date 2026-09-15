@@ -33,7 +33,7 @@
       { label: 'Information', href: 'information.html', sub: [
           { label: '주식 시황',        href: 'information.html?v=briefs' },
           { label: '리포트 인사이트',  href: 'information.html?v=insights' },
-          { label: '시장 건전성',      href: 'information.html?v=market' },
+          { label: '시장 온도계',      href: 'information.html?v=market' },
           { label: '수급 동향',        href: 'information.html?v=flow' },
           { label: '사이클 모니터',    href: 'information.html?v=korea_cycle' } ] },
       { label: 'Notice',      href: 'notice.html', sub: [
@@ -59,7 +59,7 @@
         { key: 'insights',    ic: '🚀', title: '리포트 인사이트', file: 'insights.html',    desc: '증권사 리포트 요약과 상승여력 순위' },
         { key: 'x',           ic: '𝕏',  title: 'X 모니터링',      file: 'x.html',           desc: '글로벌 투자자 계정의 주요 논점 정리' },
         { grp: '시장 지표' },
-        { key: 'market',      ic: '🌡️', title: '시장 건전성',     file: 'market.html',      desc: 'A/D·신고저·이평 비율·공포탐욕 종합 스코어' },
+        { key: 'market',      ic: '🌡️', title: '시장 온도계',     file: 'market.html',      desc: 'A/D·신고저·이평 비율·공포탐욕 종합 스코어' },
         { key: 'leverage',    ic: '📊', title: '시장 레버리지',   file: 'leverage.html',    desc: '신용잔고·예탁금·반대매매 추이' },
         { key: 'flow',        ic: '💰', title: '수급 동향',       file: 'flow.html',        desc: '코스피·코스닥·선물 투자자별 매매 동향' },
         { key: 'crypto',      ic: '₿',  title: '크립토 모니터',   file: 'crypto.html',      desc: 'BTC 핵심 지표·ETF 자금 흐름' },
