@@ -28,11 +28,20 @@
           { label: '성장·방어 포트폴리오 자문', href: 'product.html' } ] },
       { label: 'Process',     href: 'process.html' },
       { label: 'Information', href: 'information.html', sub: [
-          { label: '오늘의 시황',          href: 'information.html?v=briefs' },
-          { label: '오늘의 주도주',        href: 'information.html?v=screener' },
-          { label: '시장 온도계',          href: 'information.html?v=market' },
-          { label: '투자자별 매매 동향',   href: 'information.html?v=flow' },
-          { label: '한국 증시 사이클',     href: 'information.html?v=korea_cycle' } ] },
+          { head: '오늘의 시장' },
+          { label: '오늘의 시황',            href: 'information.html?v=briefs' },
+          { label: '시장 온도계',            href: 'information.html?v=market' },
+          { label: '투자자별 매매 동향',     href: 'information.html?v=flow' },
+          { head: '종목 발굴' },
+          { label: '오늘의 주도주',          href: 'information.html?v=screener' },
+          { label: '오늘의 주도 업종',       href: 'information.html?v=strategy' },
+          { label: '상대 강도 순위',         href: 'information.html?v=rs' },
+          { label: '종목 투자 포인트 점검',  href: 'information.html?v=thesis' },
+          { head: '큰 흐름 · 도구' },
+          { label: '한국 증시 사이클',       href: 'information.html?v=korea_cycle' },
+          { label: '주식 차트',              href: 'information.html?v=chart' },
+          { label: '월별 성적표',            href: 'information.html?v=seasonality' },
+          { label: '전체 보기 →',            href: 'information.html' } ] },
       { label: 'Education',   href: 'education.html', sub: [
           { label: 'AI 퀀트 투자 과정', href: 'edu-quant.html' } ] },
       { label: 'Notice',      href: 'notice.html', sub: [
@@ -181,7 +190,9 @@
       html += '<li class="' + active.trim() + '"><a class="top" href="' + m.href + '">' + esc(m.label) + '</a>';
       if (m.sub) {
         html += '<ul class="sub">';
-        m.sub.forEach(function (s) { html += '<li><a href="' + s.href + '">' + esc(s.label) + '</a></li>'; });
+        m.sub.forEach(function (s) {
+          html += s.head ? '<li class="sub-head">' + esc(s.head) + '</li>' : '<li><a href="' + s.href + '">' + esc(s.label) + '</a></li>';
+        });
         html += '</ul>';
       }
       html += '</li>';
