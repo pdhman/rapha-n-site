@@ -36,10 +36,30 @@
           { label: '시장 온도계',      href: 'information.html?v=market' },
           { label: '수급 동향',        href: 'information.html?v=flow' },
           { label: '사이클 모니터',    href: 'information.html?v=korea_cycle' } ] },
+      { label: 'Education',   href: 'education.html', sub: [
+          { label: 'AI 퀀트 투자 과정', href: 'edu-quant.html' } ] },
       { label: 'Notice',      href: 'notice.html', sub: [
           { label: '공지/공시',        href: 'notice.html' } ] },
       { label: 'About',       href: 'about.html' }
     ],
+    /* 교육 과정. 새 과정은 courses 에 한 줄 추가(href 가 없으면 '준비 중' 카드로 표시). */
+    courses: [
+      { ic: '🤖', title: 'AI 퀀트 투자 과정', status: '모집 예정', href: 'edu-quant.html',
+        desc: '코딩을 몰라도 AI와 함께 나만의 투자 규칙을 만들고 과거 데이터로 검증하는 입문 과정.' },
+      { ic: '📊', title: '시장 지표 읽기', status: '준비 중', href: '',
+        desc: '수급·레버리지·시장 온도계 등 매일 보는 지표를 해석하는 법.' },
+      { ic: '🧭', title: '투자 논리 세우기', status: '준비 중', href: '',
+        desc: '재료에서 실적까지, 한 종목의 투자 논리를 점검표로 검증하는 법.' }
+    ],
+    /* AI 퀀트 과정 모집 정보(edu-quant.html 의 신청 영역에 표시). 확정되면 값만 바꾸면 된다. */
+    eduQuant: {
+      schedule: '추후 공지 (예: 주 1회 · 8주)',
+      format:   '추후 공지 (예: 오프라인 강의 + 실습)',
+      seats:    '추후 공지 (예: 20명 내외)',
+      price:    '추후 공지',
+      teacher:  '라파엔투자자문 박동현 팀장',
+      applyUrl: ''     // 구글 폼 등 실제 접수 주소. 넣으면 신청서 제출 시 그 주소로 이동한다.
+    },
     /* 대시보드 목록. key 는 URL ?v=key 로 쓰이고 file 은 알파노트의 파일명. */
     dashboards: {
       strategy: [
@@ -287,6 +307,37 @@
     $$('[data-alpha]').forEach(function (a) { a.href = SITE.alphaBase + a.dataset.alpha; });
   }
 
+  /* ── 9-1. 교육 ───────────────────────────────────── */
+  function renderCourses(el) {
+    el.innerHTML = SITE.courses.map(function (c) {
+      var open = !!c.href, tag = open ? 'a' : 'div';
+      return '<' + tag + ' class="card course' + (open ? '' : ' soon') + '"' + (open ? ' href="' + c.href + '"' : '') + '>' +
+        '<div class="ic">' + c.ic + '</div><span class="badge' + (open ? '' : ' mute') + '">' + esc(c.status) + '</span>' +
+        '<h3>' + esc(c.title) + '</h3><p>' + esc(c.desc) + '</p>' + (open ? '<span class="tag">자세히 →</span>' : '') + '</' + tag + '>';
+    }).join('');
+  }
+  function initApply(form) {
+    var E = SITE.eduQuant, msgEl = $('#apply-msg');
+    $$('[data-edu]').forEach(function (e) { if (E[e.dataset.edu] != null) e.textContent = E[e.dataset.edu]; });
+    function say(t, cls) { msgEl.textContent = t; msgEl.className = 'form-msg ' + (cls || ''); }
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var v = function (id) { return ($('#' + id).value || '').trim(); };
+      if (!v('a-name') || !v('a-phone') || !v('a-email')) { say('이름, 연락처, 이메일을 입력해 주세요.', 'err'); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v('a-email'))) { say('이메일 형식을 확인해 주세요.', 'err'); return; }
+      if (!$('#a-agree').checked) { say('개인정보 수집·이용에 동의해 주세요.', 'err'); return; }
+      if (E.applyUrl) { say('접수 페이지로 이동합니다…', 'ok'); window.open(E.applyUrl, '_blank', 'noopener'); return; }
+      if (SITE.company.email) {
+        var body = ['[AI 퀀트 투자 과정 수강 신청]', '이름: ' + v('a-name'), '연락처: ' + v('a-phone'), '이메일: ' + v('a-email'),
+          '구분: ' + v('a-job'), '코딩 경험: ' + v('a-code'), '투자 경험: ' + v('a-inv'), '', v('a-msg')].join('\n');
+        location.href = 'mailto:' + SITE.company.email + '?subject=' + encodeURIComponent('AI 퀀트 투자 과정 수강 신청 - ' + v('a-name')) + '&body=' + encodeURIComponent(body);
+        say('메일 작성 창이 열립니다. 보내기를 누르면 접수됩니다.', 'ok'); return;
+      }
+      // 접수 채널이 아직 연결되지 않은 예시 상태: 입력값은 어디에도 전송·저장하지 않는다.
+      say('신청 화면 예시입니다. 실제 접수 채널 연결 전이라 입력하신 내용은 전송되지 않았습니다. 문의: ' + SITE.company.tel, 'ok');
+    });
+  }
+
   /* ── 10. 부트 ────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
     renderHeader(); renderFooter(); fillCompany();
@@ -294,5 +345,7 @@
     $$('[data-viewer]').forEach(renderViewer);
     var live = $('#live-cards'); if (live) renderLive(live);
     var nb = $('#notice-board'); if (nb) renderNotices(nb);
+    var cl = $('#course-list'); if (cl) renderCourses(cl);
+    var af = $('#apply-form'); if (af) initApply(af);
   });
 })();
