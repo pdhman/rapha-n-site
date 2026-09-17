@@ -24,18 +24,15 @@
     },
     menu: [
       { label: 'Business',    href: 'business.html' },
-      { label: 'Strategy',    href: 'strategy.html', sub: [
-          { label: '주도섹터 리포트',  href: 'strategy.html?v=strategy' },
-          { label: '종목탐색',         href: 'strategy.html?v=screener' },
-          { label: 'RS 스크리너',      href: 'strategy.html?v=rs' },
-          { label: '투자 논리 랩',     href: 'strategy.html?v=thesis' } ] },
+      { label: 'Product',     href: 'product.html', sub: [
+          { label: '성장·방어 포트폴리오 자문', href: 'product.html' } ] },
       { label: 'Process',     href: 'process.html' },
       { label: 'Information', href: 'information.html', sub: [
-          { label: '주식 시황',        href: 'information.html?v=briefs' },
-          { label: '리포트 인사이트',  href: 'information.html?v=insights' },
-          { label: '시장 온도계',      href: 'information.html?v=market' },
-          { label: '수급 동향',        href: 'information.html?v=flow' },
-          { label: '사이클 모니터',    href: 'information.html?v=korea_cycle' } ] },
+          { label: '오늘의 시황',          href: 'information.html?v=briefs' },
+          { label: '오늘의 주도주',        href: 'information.html?v=screener' },
+          { label: '시장 온도계',          href: 'information.html?v=market' },
+          { label: '투자자별 매매 동향',   href: 'information.html?v=flow' },
+          { label: '한국 증시 사이클',     href: 'information.html?v=korea_cycle' } ] },
       { label: 'Education',   href: 'education.html', sub: [
           { label: 'AI 퀀트 투자 과정', href: 'edu-quant.html' } ] },
       { label: 'Notice',      href: 'notice.html', sub: [
@@ -60,32 +57,85 @@
       teacher:  '라파엔투자자문 박동현 팀장',
       applyUrl: ''     // 구글 폼 등 실제 접수 주소. 넣으면 신청서 제출 시 그 주소로 이동한다.
     },
-    /* 대시보드 목록. key 는 URL ?v=key 로 쓰이고 file 은 알파노트의 파일명. */
-    dashboards: {
-      strategy: [
-        { grp: '리서치' },
-        { key: 'strategy',    ic: '📝', title: '주도섹터 리포트', file: 'strategy.html',    desc: '일간 주도 섹터·주도주 흐름과 투자 아이디어' },
-        { key: 'thesis',      ic: '🧭', title: '투자 논리 랩',    file: 'thesis.html',      desc: '재료→증거→실적 전달을 30점으로 검증하는 종목 논리' },
-        { grp: '스크리닝' },
-        { key: 'screener',    ic: '🔎', title: '종목탐색',        file: 'screener.html',    desc: '거래대금·수급·기술적 조건으로 고른 오늘의 주도주' },
-        { key: 'rs',          ic: '🔥', title: 'RS 스크리너',     file: 'rs.html',          desc: '섹터·업종·테마·ETF 상대강도 랭킹' },
-        { grp: '분석 도구' },
-        { key: 'chart',       ic: '📈', title: '주식 차트',       file: 'chart.html',       desc: '캔들·이동평균·로그 스케일 차트' },
-        { key: 'seasonality', ic: '🗓️', title: '계절성 분석',     file: 'seasonality.html', desc: '월별 통계·최적 진입 시점·히트맵' }
+    /* 자문 상품(product.html 과 홈에서 공통으로 쓰는 문구·숫자). */
+    product: {
+      name: '성장·방어 포트폴리오 자문',
+      stats: [
+        { big: '10년',    label: '과거 데이터로 검증',   sub: '백테스트' },
+        { big: '실전',    label: '회사 자기자본으로 운용', sub: '직접 투자로 검증' },
+        { big: '3~10',    label: '핵심 종목에 집중',     sub: '가장 강한 산업의 대표주' },
+        { big: '0~100%',  label: '주식 비중 조절',       sub: '시장 상태에 따라' }
       ],
+      /* 시장 상태 5단계와 주식 비중 범위(가운데 값으로 막대 높이를 그린다). */
+      regime: [
+        { ic: '☀️', name: '매우 좋음', stock: [90, 100] },
+        { ic: '🌤️', name: '좋음',      stock: [70, 90] },
+        { ic: '⛅', name: '보통',      stock: [40, 70] },
+        { ic: '🌧️', name: '나쁨',      stock: [20, 40] },
+        { ic: '⛈️', name: '매우 나쁨', stock: [0, 20] }
+      ],
+      flow: [
+        { ic: '🔬', q: '무엇을 살까?',     a: '성장하는 산업',   d: '산업 리서치' },
+        { ic: '🌦️', q: '지금 사도 될까?', a: '시장 날씨 확인',  d: '금리 · 유동성 · 이익' },
+        { ic: '⏱️', q: '언제 살까?',       a: '오르는 흐름에서', d: '추세 · 상대 강도' },
+        { ic: '⚖️', q: '얼마나 살까?',     a: '위험만큼만',      d: '비중 · 현금 조절' }
+      ]
+    },
+    /* 홈 '매일 공개하는 리서치'에 보여 줄 카드(순서대로, data-limit 개수만큼). */
+    homeCards: ['screener', 'strategy', 'market', 'flow', 'insights', 'briefs'],
+    /* 콘텐츠 목록. key 는 URL ?v=key, file 은 알파노트의 파일명.
+       title 은 누구나 알 수 있는 이름으로, desc 는 한 줄 설명, about 은 화면 위에 보여 주는 보충 설명. */
+    dashboards: {
       information: [
-        { grp: '시황' },
-        { key: 'briefs',      ic: '📰', title: '주식 시황',       file: 'briefs.html',      desc: '당일 개장 흐름과 거시·실적·전술 브리핑' },
-        { key: 'insights',    ic: '🚀', title: '리포트 인사이트', file: 'insights.html',    desc: '증권사 리포트 요약과 상승여력 순위' },
-        { key: 'x',           ic: '𝕏',  title: 'X 모니터링',      file: 'x.html',           desc: '글로벌 투자자 계정의 주요 논점 정리' },
-        { grp: '시장 지표' },
-        { key: 'market',      ic: '🌡️', title: '시장 온도계',     file: 'market.html',      desc: 'A/D·신고저·이평 비율·공포탐욕 종합 스코어' },
-        { key: 'leverage',    ic: '📊', title: '시장 레버리지',   file: 'leverage.html',    desc: '신용잔고·예탁금·반대매매 추이' },
-        { key: 'flow',        ic: '💰', title: '수급 동향',       file: 'flow.html',        desc: '코스피·코스닥·선물 투자자별 매매 동향' },
-        { key: 'crypto',      ic: '₿',  title: '크립토 모니터',   file: 'crypto.html',      desc: 'BTC 핵심 지표·ETF 자금 흐름' },
-        { grp: '사이클' },
-        { key: 'korea_cycle', ic: '🔄', title: '한국 시장 사이클', file: 'korea_cycle.html', desc: 'Global→반도체→Breadth→Euphoria 국면 모델' },
-        { key: 'aicycle',     ic: '🤖', title: 'AI 사이클 리스크', file: 'aicycle.html',     desc: '공급과잉·수요둔화·레버리지 위험 신호' }
+        { grp: '오늘의 시장' },
+        { key: 'briefs',      ic: '📰', title: '오늘의 시황',        file: 'briefs.html',
+          desc: '장 시작 전에 알아야 할 핵심 뉴스와 대응 포인트',
+          about: '밤사이 해외 시장과 주요 뉴스를 정리하고, 오늘 시장을 어떻게 볼지 매일 아침 요약합니다.' },
+        { key: 'market',      ic: '🌡️', title: '시장 온도계',        file: 'market.html',
+          desc: '지금 시장이 과열인지 침체인지 0~100점으로',
+          about: '오르는 종목 수, 신고가·신저가, 변동성 등을 합쳐 시장의 체온을 점수로 보여 줍니다. 높을수록 과열, 낮을수록 침체입니다.' },
+        { key: 'flow',        ic: '💰', title: '투자자별 매매 동향', file: 'flow.html',
+          desc: '외국인·기관·개인이 오늘 얼마나 사고팔았나',
+          about: '누가 사고 누가 팔았는지를 매일 집계합니다. 외국인과 기관의 움직임은 시장 방향을 읽는 단서입니다.' },
+        { key: 'leverage',    ic: '📊', title: '빚투 · 대기자금',    file: 'leverage.html',
+          desc: '빚내서 투자한 돈과 대기 중인 돈의 추이',
+          about: '신용잔고(빚내서 산 주식)와 예탁금(살 준비가 된 돈)의 흐름입니다. 빚투가 급증하면 과열 신호로 봅니다.' },
+        { grp: '종목 발굴' },
+        { key: 'screener',    ic: '🔎', title: '오늘의 주도주',      file: 'screener.html',
+          desc: '회사 내부 기준을 통과한 오늘의 강한 종목',
+          about: '거래대금·수급·추세 등 회사 내부 기준을 모두 통과한 종목만 매일 자동으로 추립니다. 매수 추천이 아니라 관심 종목 후보입니다.' },
+        { key: 'strategy',    ic: '📝', title: '오늘의 주도 업종',   file: 'strategy.html',
+          desc: '오늘 시장을 이끈 업종과 그 이유',
+          about: '그날 시장을 주도한 업종과 종목, 배경을 매일 리포트로 정리합니다.' },
+        { key: 'rs',          ic: '🔥', title: '상대 강도 순위',     file: 'rs.html',
+          desc: '시장보다 더 강하게 오르는 업종·테마·종목',
+          about: '시장 평균보다 얼마나 더 강한지를 1~99점으로 매긴 순위입니다. 점수가 높을수록 주도주에 가깝습니다.' },
+        { key: 'insights',    ic: '🚀', title: '증권사 리포트 요약', file: 'insights.html',
+          desc: '오늘 나온 증권사 리포트와 목표가 대비 상승 여력',
+          about: '그날 발간된 증권사 리포트를 요약하고, 목표 주가까지 얼마나 남았는지 순위로 보여 줍니다.' },
+        { key: 'thesis',      ic: '🧭', title: '종목 투자 포인트 점검', file: 'thesis.html',
+          desc: '왜 이 종목인가를 30점 체크리스트로 점검',
+          about: '산업 전망부터 실적, 가격까지 투자 이유를 단계별로 점검해 30점 만점으로 채점합니다.' },
+        { grp: '큰 흐름' },
+        { key: 'korea_cycle', ic: '🔄', title: '한국 증시 사이클',   file: 'korea_cycle.html',
+          desc: '지금 시장은 사이클의 어디쯤인가',
+          about: '글로벌 경기, 반도체, 시장 참여도, 과열 정도를 종합해 현재 국면을 판단합니다.' },
+        { key: 'aicycle',     ic: '🤖', title: 'AI 투자 붐 점검',    file: 'aicycle.html',
+          desc: 'AI 투자 열기가 꺾일 위험 신호',
+          about: '공급 과잉, 수요 둔화, 과도한 빚 등 AI 투자 붐이 끝날 때 나타나는 신호를 점검합니다.' },
+        { key: 'x',           ic: '𝕏',  title: '해외 투자자 동향',   file: 'x.html',
+          desc: '글로벌 투자 전문가들이 오늘 주목한 주제',
+          about: '해외 유명 투자자와 분석가의 글을 모아 오늘의 주요 논점을 주제별로 정리합니다.' },
+        { key: 'crypto',      ic: '₿',  title: '비트코인 지표',      file: 'crypto.html',
+          desc: '비트코인 가격과 ETF 자금 흐름',
+          about: '비트코인의 과열·침체 지표와 현물 ETF로 들어오고 나가는 자금을 매일 확인합니다.' },
+        { grp: '분석 도구' },
+        { key: 'chart',       ic: '📈', title: '주식 차트',          file: 'chart.html',
+          desc: '종목별 가격 흐름을 한눈에',
+          about: '국내외 종목의 가격 흐름과 평균선을 확인하는 차트입니다.' },
+        { key: 'seasonality', ic: '🗓️', title: '월별 성적표',        file: 'seasonality.html',
+          desc: '이 종목은 몇 월에 강했을까',
+          about: '과거 데이터로 월별 평균 수익률과 오른 비율을 보여 줍니다. 계절적인 강세·약세 구간을 찾을 때 씁니다.' }
       ]
     },
     /* 공지/공시 글은 notices.json 에 있다(admin.html 에서 작성). 아래는 파일을 못 읽을 때의 폴백. */
@@ -196,10 +246,11 @@
     });
     side += '</nav>';
     el.className = 'viewer';
-    el.innerHTML = side + '<div class="main"><div class="bar"><b id="v-title"></b><span class="desc" id="v-desc"></span><a class="ext" id="v-ext" target="_blank" rel="noopener">새 창에서 열기 ↗</a></div><iframe id="v-frame" title="대시보드"></iframe></div>';
+    el.innerHTML = side + '<div class="main"><div class="bar"><b id="v-title"></b><span class="desc" id="v-desc"></span><a class="ext" id="v-ext" target="_blank" rel="noopener">새 창에서 열기 ↗</a></div><div class="about" id="v-about"></div><iframe id="v-frame" title="대시보드"></iframe></div>';
     function show(item, push) {
       $('#v-title', el).textContent = item.ic + ' ' + item.title;
       $('#v-desc', el).textContent = item.desc || '';
+      var ab = $('#v-about', el); ab.textContent = item.about ? '💡 ' + item.about : ''; ab.hidden = !item.about;
       $('#v-ext', el).href = SITE.alphaBase + item.file;
       $('#v-frame', el).src = SITE.alphaBase + item.file;
       $$('.side a', el).forEach(function (a) { a.classList.toggle('on', a.dataset.key === item.key); });
@@ -214,37 +265,70 @@
   }
 
   /* ── 7. 홈: 알파노트 라이브 카드 ─────────────────── */
-  function staticCards() {
-    var out = '';
-    ['information', 'strategy'].forEach(function (g) {
-      SITE.dashboards[g].forEach(function (d) {
-        if (d.grp) return;
-        out += '<a class="scard" href="' + g + '.html?v=' + d.key + '"><div class="sc-head"><span class="sc-icon">' + d.ic + '</span><span class="sc-title">' + esc(d.title) + '</span></div>' +
-          '<div class="sc-body"><p class="clamp">' + esc(d.desc) + '</p></div><div class="sc-more">자세히 →</div></a>';
-      });
-    });
+  function cardHead(d, date) {
+    return '<div class="sc-head"><span class="sc-icon">' + d.ic + '</span><span class="sc-title">' + esc(d.title) + '</span>' +
+      (date ? '<span class="sc-date">' + esc(date) + '</span>' : '') + '</div><div class="sc-desc">' + esc(d.desc) + '</div>';
+  }
+  function homeList(limit) {
+    var keys = SITE.homeCards.slice(0, limit || 99), out = [];
+    keys.forEach(function (k) { var d = findDash(k); if (d) out.push(d.item); });
     return out;
   }
   function renderLive(el) {
-    var status = $('#live-status'), dateEl = $('#live-date');
-    el.innerHTML = staticCards();
+    var status = $('#live-status'), dateEl = $('#live-date'), limit = +el.dataset.limit || 6;
+    var items = homeList(limit);
+    el.innerHTML = items.map(function (d) {
+      return '<a class="scard" href="information.html?v=' + d.key + '">' + cardHead(d) + '<div class="sc-more">자세히 →</div></a>';
+    }).join('');
     fetch(SITE.alphaBase + 'index.html', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
       .then(function (html) {
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var cards = $$('.scard', doc); if (!cards.length) throw new Error('no cards');
-        var out = '';
-        cards.forEach(function (c) {
-          var file = (c.getAttribute('href') || '').split('?')[0];
-          var d = dashByFile(file);
-          var href = d ? d.group + '.html?v=' + d.item.key : SITE.alphaBase + file;
-          var body = $('.sc-body', c); var head = $('.sc-head', c);
-          out += '<a class="scard" href="' + href + '">' + (head ? head.outerHTML : '') + (body ? body.outerHTML : '') + '<div class="sc-more">자세히 →</div></a>';
-        });
-        el.innerHTML = out;
-        var dt = $('.date', doc); if (dt && dateEl) dateEl.textContent = dt.textContent.trim();
-        if (status) status.textContent = '알파노트에서 방금 불러온 최신 요약입니다.';
+        var doc = new DOMParser().parseFromString(html, 'text/html'), byFile = {};
+        $$('.scard', doc).forEach(function (c) { byFile[(c.getAttribute('href') || '').split('?')[0]] = c; });
+        el.innerHTML = items.map(function (d) {
+          var c = byFile[d.file], body = c && $('.sc-body', c), dt = c && $('.sc-date', c);
+          return '<a class="scard" href="information.html?v=' + d.key + '">' + cardHead(d, dt ? dt.textContent.trim() : '') +
+            (body ? body.outerHTML : '') + '<div class="sc-more">자세히 →</div></a>';
+        }).join('');
+        var top = $('.date', doc); if (top && dateEl) dateEl.textContent = top.textContent.trim();
+        if (status) status.textContent = '';
       })
-      .catch(function () { if (status) status.textContent = '실시간 요약을 불러오지 못해 기본 목록을 표시합니다.'; });
+      .catch(function () { if (status) status.textContent = ''; });
+  }
+
+  /* ── 7-1. 공통 그림 컴포넌트(홈·자문 상품 페이지가 함께 쓴다) ── */
+  function compStats() {
+    return '<div class="statband">' + SITE.product.stats.map(function (x) {
+      return '<div class="stat"><b>' + esc(x.big) + '</b><span>' + esc(x.label) + '</span><small>' + esc(x.sub) + '</small></div>';
+    }).join('') + '</div>';
+  }
+  function compRegime() {
+    var cols = SITE.product.regime.map(function (r) {
+      var mid = (r.stock[0] + r.stock[1]) / 2;
+      return '<div class="rg-col"><div class="rg-ic">' + r.ic + '</div><div class="rg-name">' + esc(r.name) + '</div>' +
+        '<div class="rg-bar"><div class="rg-cash" style="height:' + (100 - mid) + '%"></div><div class="rg-stock" style="height:' + mid + '%"></div></div>' +
+        '<div class="rg-val">주식 <b>' + r.stock[0] + '~' + r.stock[1] + '%</b></div></div>';
+    }).join('');
+    return '<div class="regime"><div class="rg-grid">' + cols + '</div>' +
+      '<div class="rg-legend"><span><i class="lg-stock"></i>주식</span><span><i class="lg-cash"></i>현금</span></div></div>';
+  }
+  function compFlow4() {
+    return '<div class="flow4">' + SITE.product.flow.map(function (f, i) {
+      return '<div class="f4"><div class="f4-no">' + (i + 1) + '</div><div class="f4-ic">' + f.ic + '</div><div class="f4-q">' + esc(f.q) + '</div>' +
+        '<div class="f4-a">' + esc(f.a) + '</div><div class="f4-d">' + esc(f.d) + '</div></div>';
+    }).join('<div class="f4-arrow">→</div>') + '</div>';
+  }
+  function compDots(el) {
+    var focus = el.dataset.dots === 'focus', n = 120, pick = {};
+    [2, 26, 39, 50, 71, 88, 99, 112].forEach(function (i) { pick[i] = 1; });
+    var h = '';
+    for (var i = 0; i < n; i++) h += '<i class="' + (focus ? (pick[i] ? 'hit' : 'dim') : '') + '"></i>';
+    el.innerHTML = h;
+  }
+  function renderComps() {
+    var map = { stats: compStats, regime: compRegime, flow4: compFlow4 };
+    $$('[data-comp]').forEach(function (e) { var f = map[e.dataset.comp]; if (f) e.innerHTML = f(); });
+    $$('[data-dots]').forEach(compDots);
+    $$('[data-product]').forEach(function (e) { var v = SITE.product[e.dataset.product]; if (v != null) e.textContent = v; });
   }
 
   /* ── 8. 공지 게시판 ───────────────────────────────── */
@@ -340,7 +424,7 @@
 
   /* ── 10. 부트 ────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', function () {
-    renderHeader(); renderFooter(); fillCompany();
+    renderHeader(); renderFooter(); fillCompany(); renderComps();
     var c = $('#hero-canvas'); if (c) particles(c);
     $$('[data-viewer]').forEach(renderViewer);
     var live = $('#live-cards'); if (live) renderLive(live);

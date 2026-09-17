@@ -9,9 +9,10 @@ rapha-n.com 과 같은 메뉴 구조(Business / Strategy / Process / Information
 |---|---|
 | `index.html` | 메인. 히어로 + 알파노트 라이브 요약 카드 + 회사 철학 + AI 소개 |
 | `business.html` | 사업 영역, 데이터 소스, 고객 |
-| `strategy.html` | 운용전략 대시보드 뷰어(주도섹터 리포트·논리 랩·종목탐색·RS·차트·계절성) |
+| `product.html` | 자문 상품 랜딩(성장·방어 포트폴리오 자문). 숫자·시장 날씨·네 가지 질문 그림은 `SITE.product` 에서 생성 |
+| `strategy.html` | 예전 주소용 이동 페이지(`?v=` 있으면 information, 없으면 product) |
 | `process.html` | 5단계 투자 프로세스, 하루 일정, 운용 원칙 |
-| `information.html` | 시황·시장 지표·사이클 대시보드 뷰어 |
+| `information.html` | 매일 공개하는 리서치 뷰어. 모든 콘텐츠가 여기 모여 있고 쉬운 이름·설명(`title/desc/about`)을 단다 |
 | `education.html` | 교육 허브. 대표 과정 + `SITE.courses` 목록(href 없으면 '준비 중' 카드) |
 | `edu-quant.html` | AI 퀀트 투자 과정 랜딩: 니즈 환기 → 커리큘럼(7모듈) → 신청 폼(예시) → FAQ |
 | `notice.html` | 공지/공시 게시판 (목록 + `?id=` 상세) |
@@ -25,7 +26,8 @@ rapha-n.com 과 같은 메뉴 구조(Business / Strategy / Process / Information
 
 - 회사 정보(대표·주소·전화·이메일) → `SITE.company`
 - 상단 메뉴·드롭다운 → `SITE.menu`
-- 대시보드 추가/삭제 → `SITE.dashboards.strategy` 또는 `.information` 에 `{ key, ic, title, file, desc }` 한 줄 추가.
+- 자문 상품 이름·검증 숫자·시장 단계별 주식 비중 → `SITE.product`. 홈에 보일 리서치 카드 → `SITE.homeCards`.
+- 콘텐츠 추가/삭제 → `SITE.dashboards.information` 에 `{ key, ic, title, file, desc, about }` 추가. title 은 누구나 아는 말로, about 은 '이게 무엇인지' 한두 문장.
   `file` 은 알파노트(`docs/`)의 파일명.
 - 교육 과정 추가 → `SITE.courses` 에 한 줄. 퀀트 과정 일정·수강료·강사·접수 주소 → `SITE.eduQuant`(`applyUrl` 에 구글 폼 주소를 넣으면 신청서 제출 시 그 주소로 이동. 비어 있으면 회사 이메일로 mailto, 그것도 없으면 예시 안내만 표시). **신청자 개인정보를 이 공개 저장소에 저장하지 말 것.**
 - 공지 글 → `notices.json` 이 원본. **admin.html** 에서 GitHub 토큰(rapha-n-site 저장소 Contents 읽기/쓰기)을 등록하면 사이트 안에서 작성·수정·삭제할 수 있고, 저장하면 GitHub API 로 notices.json 이 커밋된다(1~2분 뒤 반영). GitHub 웹에서 notices.json 을 직접 편집해도 된다.
