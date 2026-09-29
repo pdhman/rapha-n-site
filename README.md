@@ -48,7 +48,7 @@ python -m http.server 8080
 ## 배포 (완료)
 
 - 저장소: https://github.com/pdhman/rapha-n-site (homepage/ 폴더가 독립 git 저장소)
-- 공개 주소: https://pdhman.github.io/rapha-n-site/
+- 공개 주소: https://rapha-n.com/ (도메인은 후이즈에서 관리, 네임서버 고급설정에 A 4개 + www CNAME)
 - main 브랜치 루트를 GitHub Pages 가 서빙하므로 `git push` 가 곧 배포다(1~2분 소요).
 - rapha-n.com 을 연결하려면 Settings → Pages → Custom domain 에 입력하고 DNS 를 GitHub Pages 로 변경.
 
