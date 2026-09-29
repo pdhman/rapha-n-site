@@ -175,7 +175,10 @@
     document.documentElement.dataset.theme = t;
     try { localStorage.setItem('theme', t); } catch (e) {}
     var b = $('#theme-btn'); if (b) b.textContent = t === 'dark' ? '☀️' : '🌙';
-    var f = $('#v-frame'); if (f && f.src) { var u = f.src; f.src = 'about:blank'; setTimeout(function () { f.src = u; }, 30); }
+    var f = $('#v-frame'); if (f && f.src && f.src.indexOf('theme=') > -1) {
+      var u = f.src.replace(/theme=(dark|light)/, 'theme=' + t);
+      if (u !== f.src) { f.src = 'about:blank'; setTimeout(function () { f.src = u; }, 30); }
+    }
   }
   (function () { var t = null; try { t = localStorage.getItem('theme'); } catch (e) {} if (t) document.documentElement.dataset.theme = t; })();
 
@@ -245,6 +248,7 @@
   }
 
   /* ── 6. 대시보드 뷰어 ─────────────────────────────── */
+  function frameUrl(file) { return SITE.alphaBase + file + (file.indexOf('?') < 0 ? '?' : '&') + 'theme=' + curTheme(); }
   function renderViewer(el) {
     var group = el.dataset.viewer, list = SITE.dashboards[group] || [];
     var firstKey = null; list.forEach(function (d) { if (!firstKey && d.key) firstKey = d.key; });
@@ -263,7 +267,7 @@
       $('#v-desc', el).textContent = item.desc || '';
       var ab = $('#v-about', el); ab.textContent = item.about ? '💡 ' + item.about : ''; ab.hidden = !item.about;
       $('#v-ext', el).href = SITE.alphaBase + item.file;
-      $('#v-frame', el).src = SITE.alphaBase + item.file;
+      $('#v-frame', el).src = frameUrl(item.file);
       $$('.side a', el).forEach(function (a) { a.classList.toggle('on', a.dataset.key === item.key); });
       document.title = item.title + ' · ' + SITE.name;
       if (push) history.pushState({ v: item.key }, '', pageFile() + '?v=' + item.key);
