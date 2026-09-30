@@ -186,7 +186,7 @@
   function renderHeader() {
     var here = pageFile();
     var html = '<div class="wrap">' +
-      '<a class="brand" href="index.html"><span class="mark"></span><span>' + esc(SITE.name) + '</span></a>' +
+      '<a class="brand" href="index.html"><span>' + esc(SITE.name) + '</span></a>' +
       '<ul class="nav" id="nav">';
     SITE.menu.forEach(function (m) {
       var active = here === m.href.split('?')[0] ? ' active' : '';
