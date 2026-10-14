@@ -398,10 +398,14 @@
           document.title = n.title + ' · ' + SITE.name; return;
         }
       }
+      // 화면 번호: 작성일이 빠른 글부터 1, 2, 3… (고정·삭제와 무관하게 이어지는 순번). 링크는 내부 id 를 그대로 쓴다.
+      var seq = {};
+      notices.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id; })
+        .forEach(function (n, i) { seq[n.id] = i + 1; });
       var rows = notices.slice().sort(function (a, b) { return (b.pin - a.pin) || (b.date > a.date ? 1 : b.date < a.date ? -1 : b.id - a.id); });
       var html = '<table class="board"><thead><tr><th style="width:60px">No</th><th>제목</th><th style="width:90px">분류</th><th style="width:120px">작성일</th></tr></thead><tbody>';
       rows.forEach(function (n) {
-        html += '<tr><td class="no">' + n.id + '</td><td class="title"><a href="notice.html?id=' + n.id + '">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + esc(n.title) + (n.files && n.files.length ? ' <span class="clip" title="첨부 ' + n.files.length + '">📎</span>' : '') + '</a></td><td>' + esc(n.cat) + '</td><td class="date">' + esc(n.date) + '</td></tr>';
+        html += '<tr><td class="no">' + seq[n.id] + '</td><td class="title"><a href="notice.html?id=' + n.id + '">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + esc(n.title) + (n.files && n.files.length ? ' <span class="clip" title="첨부 ' + n.files.length + '">📎</span>' : '') + '</a></td><td>' + esc(n.cat) + '</td><td class="date">' + esc(n.date) + '</td></tr>';
       });
       html += '</tbody></table>';
       if (!rows.length) html = '<p class="center" style="color:var(--muted)">등록된 공지가 없습니다.</p>';
