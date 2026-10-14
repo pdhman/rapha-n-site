@@ -30,7 +30,7 @@ rapha-n.com 과 같은 메뉴 구조(Business / Strategy / Process / Information
 - 콘텐츠 추가/삭제 → `SITE.dashboards.information` 에 `{ key, ic, title, file, desc, about }` 추가. title 은 누구나 아는 말로, about 은 '이게 무엇인지' 한두 문장.
   `file` 은 알파노트(`docs/`)의 파일명.
 - 교육 과정 추가 → `SITE.courses` 에 한 줄. 퀀트 과정 일정·수강료·강사·접수 주소 → `SITE.eduQuant`(`applyUrl` 에 구글 폼 주소를 넣으면 신청서 제출 시 그 주소로 이동. 비어 있으면 회사 이메일로 mailto, 그것도 없으면 예시 안내만 표시). **신청자 개인정보를 이 공개 저장소에 저장하지 말 것.**
-- 공지 글 → `notices.json` 이 원본. **admin.html** 에서 GitHub 토큰(rapha-n-site 저장소 Contents 읽기/쓰기)을 등록하면 사이트 안에서 작성·수정·삭제할 수 있고, 저장하면 GitHub API 로 notices.json 이 커밋된다(1~2분 뒤 반영). GitHub 웹에서 notices.json 을 직접 편집해도 된다.
+- 공지 글 → `notices.json` 이 원본. **admin.html** 에서 GitHub 토큰(rapha-n-site 저장소 Contents 읽기/쓰기)을 등록하면 사이트 안에서 작성·수정·삭제할 수 있고, 저장하면 GitHub API 로 notices.json 이 커밋된다(1~2분 뒤 반영). GitHub 웹에서 notices.json 을 직접 편집해도 된다. 첨부파일은 admin.html 에서 올리면 저장소 `files/` 폴더에 커밋되고 글의 `files` 배열(name·path·size·sha)에 연결된다(파일당 20MB 이하).
 
 알파노트 대시보드는 `SITE.alphaBase`(기본 `https://pdhman.github.io/report-summary/`)에서
 iframe 으로 불러온다. 메인의 "오늘의 리서치" 카드는 알파노트 `index.html` 을 fetch 해

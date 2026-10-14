@@ -376,6 +376,15 @@
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .catch(function () { return SITE.notices; });
   }
+  function fmtSize(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB'; }
+  function noticeFiles(n) {
+    if (!n.files || !n.files.length) return '';
+    return '<div class="attach"><div class="attach-head">첨부파일 ' + n.files.length + '</div><ul>' + n.files.map(function (f) {
+      var ext = (f.name.split('.').pop() || '').toLowerCase(), ic = ext === 'pdf' ? '📄' : /^(png|jpe?g|gif)$/.test(ext) ? '🖼️' : /^(xlsx?|csv)$/.test(ext) ? '📊' : '📎';
+      return '<li><a href="' + encodeURI(f.path) + '" target="_blank" rel="noopener"><span class="ic">' + ic + '</span><span class="fn">' + esc(f.name) + '</span>' +
+        '<span class="fs">' + fmtSize(f.size || 0) + '</span></a><a class="dl" href="' + encodeURI(f.path) + '" download="' + esc(f.name) + '" title="내려받기">⬇</a></li>';
+    }).join('') + '</ul></div>';
+  }
   function noticeBody(n) { return /<[a-z][\s\S]*>/i.test(n.body || '') ? n.body : md(n.body); }
   function renderNotices(el) {
     el.innerHTML = '<p class="center" style="color:var(--muted)">불러오는 중…</p>';
@@ -385,14 +394,14 @@
         var n = notices.filter(function (x) { return String(x.id) === id; })[0];
         if (n) {
           el.innerHTML = '<div class="notice-body"><h2><span class="badge' + (n.pin ? ' pin' : '') + '">' + esc(n.cat) + '</span>' + esc(n.title) + '</h2>' +
-            '<div class="meta">' + esc(n.date) + ' · ' + esc(SITE.name) + '</div><div class="md">' + noticeBody(n) + '</div><a class="back" href="notice.html">← 목록으로</a></div>';
+            '<div class="meta">' + esc(n.date) + ' · ' + esc(SITE.name) + '</div><div class="md">' + noticeBody(n) + '</div>' + noticeFiles(n) + '<a class="back" href="notice.html">← 목록으로</a></div>';
           document.title = n.title + ' · ' + SITE.name; return;
         }
       }
       var rows = notices.slice().sort(function (a, b) { return (b.pin - a.pin) || (b.date > a.date ? 1 : b.date < a.date ? -1 : b.id - a.id); });
       var html = '<table class="board"><thead><tr><th style="width:60px">No</th><th>제목</th><th style="width:90px">분류</th><th style="width:120px">작성일</th></tr></thead><tbody>';
       rows.forEach(function (n) {
-        html += '<tr><td class="no">' + n.id + '</td><td class="title"><a href="notice.html?id=' + n.id + '">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + esc(n.title) + '</a></td><td>' + esc(n.cat) + '</td><td class="date">' + esc(n.date) + '</td></tr>';
+        html += '<tr><td class="no">' + n.id + '</td><td class="title"><a href="notice.html?id=' + n.id + '">' + (n.pin ? '<span class="badge pin">고정</span>' : '') + esc(n.title) + (n.files && n.files.length ? ' <span class="clip" title="첨부 ' + n.files.length + '">📎</span>' : '') + '</a></td><td>' + esc(n.cat) + '</td><td class="date">' + esc(n.date) + '</td></tr>';
       });
       html += '</tbody></table>';
       if (!rows.length) html = '<p class="center" style="color:var(--muted)">등록된 공지가 없습니다.</p>';

@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>관리자 · 라파엔투자자문</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
-<link rel="stylesheet" href="assets/style.css?v=20260930a">
+<link rel="stylesheet" href="assets/style.css?v=20261014a">
 </head>
 <body>
 
@@ -59,6 +59,12 @@
       <textarea id="f-body" placeholder="본문을 입력하세요. 빈 줄로 문단을 나눕니다."></textarea>
       <label>미리보기</label>
       <div class="preview md" id="f-preview"></div>
+      <label for="f-file">첨부파일 (PDF · 이미지 · 문서, 파일당 20MB 이하)</label>
+      <div class="attach-box">
+        <input type="file" id="f-file" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.xlsx,.xls,.docx,.doc,.pptx,.ppt,.hwp,.hwpx,.zip,.txt,.csv">
+        <ul class="attach-list" id="f-files"></ul>
+        <div class="msg" id="file-msg"></div>
+      </div>
       <div class="actions">
         <button class="btn primary" id="save">게시하기</button>
         <button class="btn" id="reset">새 글로 초기화</button>
@@ -74,13 +80,15 @@
   </div>
 </section>
 
-<script src="assets/site.js?v=20260930a"></script>
+<script src="assets/site.js?v=20261014a"></script>
 <script>
 (function () {
   var API = 'https://api.github.com/repos/' + SITE.repo + '/contents/' + SITE.noticesFile;
   var KEY = 'rn-gh-token';
   var $ = function (s) { return document.querySelector(s); };
-  var state = { notices: [], sha: null, editing: null };
+  var state = { notices: [], sha: null, editing: null, files: [] };   // files: 현재 글의 첨부 목록
+  var FILES_API = 'https://api.github.com/repos/' + SITE.repo + '/contents/files/';
+  var MAX_FILE = 20 * 1024 * 1024;
 
   function token() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
   function headers(json) {
@@ -144,19 +152,78 @@
     state.editing = null;
     $('#form-title').textContent = '2. 새 글 쓰기';
     $('#f-cat').value = '공지'; $('#f-date').value = today(); $('#f-pin').checked = false;
-    $('#f-title').value = ''; $('#f-body').value = ''; preview(); msg($('#save-msg'), '');
+    $('#f-title').value = ''; $('#f-body').value = ''; state.files = []; renderFiles(); preview(); msg($('#save-msg'), ''); msg($('#file-msg'), '');
   }
   function startEdit(id) {
     var n = state.notices.filter(function (x) { return x.id === id; })[0]; if (!n) return;
     state.editing = id;
     $('#form-title').textContent = '2. 글 수정 (No.' + id + ')';
     $('#f-cat').value = n.cat; $('#f-date').value = n.date; $('#f-pin').checked = !!n.pin;
-    $('#f-title').value = n.title; $('#f-body').value = n.body; preview();
+    $('#f-title').value = n.title; $('#f-body').value = n.body; state.files = (n.files || []).slice(); renderFiles(); preview();
     window.scrollTo({ top: $('#form-title').getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
   }
   function preview() { $('#f-preview').innerHTML = window.renderMarkdown($('#f-body').value) || '<span style="color:var(--muted)">본문 미리보기</span>'; }
   $('#f-body').addEventListener('input', preview);
   $('#reset').onclick = resetForm;
+
+
+  /* ── 첨부파일 ── */
+  function fmtSize(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB'; }
+  function safeName(name) {
+    // 한글은 그대로 두되 공백·특수문자만 정리. 앞에 날짜를 붙여 같은 이름이 겹치지 않게 한다.
+    var base = name.replace(/[\\/:*?"<>|#%&+]/g, '_').replace(/\s+/g, '_');
+    return today().replace(/-/g, '') + '_' + Date.now().toString(36) + '_' + base;
+  }
+  function renderFiles() {
+    var ul = $('#f-files');
+    ul.innerHTML = state.files.map(function (f, i) {
+      return '<li><span class="fn">📎 ' + esc(f.name) + '</span><span class="fs">' + fmtSize(f.size) + '</span>' +
+        '<button type="button" data-rm="' + i + '" title="첨부 제거">✕</button></li>';
+    }).join('') || '<li class="empty">첨부된 파일이 없습니다.</li>';
+  }
+  function readAsB64(file) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(String(r.result).split(',')[1]); };
+      r.onerror = function () { rej(new Error('파일을 읽지 못했습니다')); };
+      r.readAsDataURL(file);
+    });
+  }
+  function uploadFile(file) {
+    var path = safeName(file.name);
+    return readAsB64(file).then(function (b64) {
+      return fetch(FILES_API + encodeURIComponent(path), { method: 'PUT', headers: headers(true),
+        body: JSON.stringify({ message: '첨부 업로드: ' + file.name, content: b64, branch: 'main' }) });
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(r.status + ' ' + (j.message || '')); return j; }); })
+      .then(function (j) { return { name: file.name, path: 'files/' + path, size: file.size, sha: j.content.sha }; });
+  }
+  $('#f-file').addEventListener('change', function () {
+    var files = Array.prototype.slice.call(this.files); this.value = '';
+    var fm = $('#file-msg');
+    if (!token()) { msg(fm, '먼저 토큰을 등록하세요.', 'err'); return; }
+    var big = files.filter(function (f) { return f.size > MAX_FILE; });
+    if (big.length) { msg(fm, big[0].name + ' 은(는) 20MB를 넘어 올릴 수 없습니다.', 'err'); return; }
+    var done = 0;
+    msg(fm, '업로드 중… (0/' + files.length + ')');
+    files.reduce(function (p, f) {
+      return p.then(function () { return uploadFile(f); }).then(function (meta) {
+        state.files.push(meta); done++; renderFiles(); msg(fm, '업로드 중… (' + done + '/' + files.length + ')');
+      });
+    }, Promise.resolve())
+      .then(function () { msg(fm, files.length + '개 업로드 완료. 글을 게시해야 첨부가 연결됩니다.', 'ok'); })
+      .catch(function (e) { msg(fm, '업로드 실패: ' + e.message, 'err'); });
+  });
+  $('#f-files').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-rm]'); if (!b) return;
+    var f = state.files[+b.dataset.rm];
+    if (!confirm('"' + f.name + '" 첨부를 이 글에서 뺄까요? (저장소의 파일도 삭제됩니다)')) return;
+    var fm = $('#file-msg'); msg(fm, '삭제 중…');
+    fetch(FILES_API + encodeURIComponent(f.path.replace(/^files\//, '')), { method: 'DELETE', headers: headers(true),
+      body: JSON.stringify({ message: '첨부 삭제: ' + f.name, sha: f.sha, branch: 'main' }) })
+      .then(function (r) { if (!r.ok && r.status !== 404) throw new Error(r.status); })
+      .then(function () { state.files.splice(+b.dataset.rm, 1); renderFiles(); msg(fm, '첨부를 제거했습니다. 글을 게시해야 반영됩니다.', 'ok'); })
+      .catch(function (e) { msg(fm, '삭제 실패: ' + e.message, 'err'); });
+  });
 
   /* ── 저장(커밋) ── */
   function commit(notices, message) {
@@ -173,6 +240,7 @@
     if (!title) { msg(sm, '제목을 입력하세요.', 'err'); return; }
     var item = { id: state.editing || (Math.max.apply(null, [0].concat(state.notices.map(function (n) { return n.id; }))) + 1),
       date: $('#f-date').value || today(), cat: $('#f-cat').value, pin: $('#f-pin').checked, title: title, body: body };
+    if (state.files.length) item.files = state.files.map(function (f) { return { name: f.name, path: f.path, size: f.size, sha: f.sha }; });
     var next = state.notices.filter(function (n) { return n.id !== item.id; }); next.unshift(item);
     $('#save').disabled = true; msg(sm, '게시 중…');
     commit(next, (state.editing ? '공지 수정: ' : '공지 게시: ') + title)
